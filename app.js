@@ -1,6 +1,9 @@
 import { CHANNELS, STATUSES, todayKey, addDays, shiftMonth, monthGrid, weekRange, normalizePost, filterPosts, getStats } from './core.js';
 import { createStore, STORAGE_KEY } from './store.js';
 import { SEED_POSTS } from './seed.js';
+import { CLOUD_CONFIG } from './cloud-config.js';
+import { createPhotoCloud } from './photos.js';
+import { mountPhotos } from './photo-ui.js';
 
 const $ = id => document.getElementById(id);
 const esc = value => String(value ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
@@ -20,6 +23,20 @@ let editingId = '', editorIntent = 'edit', initialForm = '', returnFocus = null,
 let confirmResolve = null;
 const editor = $('post-dialog');
 const confirmation = $('confirm-dialog');
+let photoRecordId = '', saving = false;
+const cloud = createPhotoCloud(CLOUD_CONFIG);
+const photos = mountPhotos({cloud, storage, project:CLOUD_CONFIG.url || 'unconfigured',
+  getStoredPosts:() => {const raw=storage.getItem(STORAGE_KEY); return raw===null?data.posts:store.parseImport(raw).posts;},
+  canClean:() => !storageLocked && !externalChange && !editor.open,
+  notify,
+});
+function setSaving(value) {
+  saving=value; $('post-form').setAttribute('aria-busy',String(value));
+  editor.querySelector('.dialog-body').inert=value;
+  editor.querySelector('.secondary-actions').inert=value;
+  editor.querySelectorAll('.dialog-head button,.primary-actions button').forEach(button=>{button.disabled=value;});
+}
+
 
 function notify(message, action = null) {
   clearTimeout(toastTimer); $('toast').hidden = false; requestAnimationFrame(() => {$('toast-message').textContent = message;});
@@ -143,47 +160,59 @@ function openEditor(record = null, overrides = {}) {
   editorIntent='edit';returnFocus=document.activeElement;
   returnFocusSelector=returnFocus.id?`#${CSS.escape(returnFocus.id)}`:returnFocus.dataset.edit?`[data-edit="${CSS.escape(returnFocus.dataset.edit)}"]`:returnFocus.dataset.action?`[data-action="${CSS.escape(returnFocus.dataset.action)}"]`:returnFocus.dataset.schedule?`[data-schedule="${CSS.escape(returnFocus.dataset.schedule)}"]`:returnFocus.dataset.publish?`[data-publish="${CSS.escape(returnFocus.dataset.publish)}"]`:'';
   if(returnFocus.closest('.view')&&returnFocusSelector)returnFocusSelector=`#${returnFocus.closest('.view').id} ${returnFocusSelector}`;
-  editingId=record?.id||'';
+  editingId=record?.id||''; photoRecordId=editingId||crypto.randomUUID();
   const p={title:'',platform:ui.platform==='all'?'linkedin':ui.platform,status:'draft',date:'',time:'',language:'ko',text:'',url:'',notes:'',...record,...overrides};
   for(const field of ['title','platform','status','date','time','language','text','url','notes'])$(`post-${field}`).value=p[field];
   $('post-id').value=editingId; $('editor-title').textContent=editingId?'콘텐츠 편집':'콘텐츠 저장';
   $('editor-eyebrow').textContent=editingId?`마지막 수정 ${dateLabel(todayKey(new Date(record.updatedAt)))}`:'콘텐츠 기록';
   $('delete-post').hidden=!editingId;$('duplicate-post').hidden=!editingId;$('form-error').hidden=true;
-  syncForm();initialForm=JSON.stringify(formValue());editor.showModal();$('post-title').focus();
+  syncForm();initialForm=JSON.stringify(formValue());editor.showModal();photos.open(photoRecordId,Boolean(record));$('post-title').focus();
 }
 function closeEditor() {editor.close();}
-editor.addEventListener('close',()=>{if(externalChange){externalChange=false;reloadStoredData();}const target=returnFocus?.isConnected?returnFocus:returnFocusSelector?document.querySelector(returnFocusSelector):null;(target?.getClientRects().length?target:$(`view-${ui.view}`).querySelector('h1')).focus({preventScroll:true});});
+editor.addEventListener('close',()=>{photos.reset();photos.closed();if(externalChange){externalChange=false;reloadStoredData();}const target=returnFocus?.isConnected?returnFocus:returnFocusSelector?document.querySelector(returnFocusSelector):null;(target?.getClientRects().length?target:$(`view-${ui.view}`).querySelector('h1')).focus({preventScroll:true});});
 async function tryCloseEditor() {
-  if(JSON.stringify(formValue())!==initialForm && !await requestConfirm('저장하지 않고 닫을까요?','작성 중인 변경 사항은 저장되지 않습니다.','닫기'))return;
+  if(saving)return;
+  if((JSON.stringify(formValue())!==initialForm || photos.dirty || photos.selecting) && !await requestConfirm('저장하지 않고 닫을까요?','작성 중인 변경 사항은 저장되지 않습니다.','닫기'))return;
   closeEditor();
 }
 editor.addEventListener('cancel',e=>{e.preventDefault();tryCloseEditor();});
 editor.addEventListener('keydown',e=>{if(e.key==='Escape'&&!confirmation.open){e.preventDefault();e.stopPropagation();tryCloseEditor();}});
 $('post-form').addEventListener('input',syncForm);
 $('post-form').addEventListener('change',syncForm);
-$('post-form').addEventListener('submit',e=>{
-  e.preventDefault();
+$('post-form').addEventListener('submit',async e=>{
+  e.preventDefault();if(saving)return;
+  let savedLocally=false;
+  setSaving(true);$('form-error').hidden=true;
   try {
     const old=data.posts.find(p=>p.id===editingId);
-    const post=normalizePost({...old,...formValue(),updatedAt:new Date().toISOString()});
+    const post=normalizePost({...old,...formValue(),id:old?.id||photoRecordId,updatedAt:new Date().toISOString()});
+    photos.assertReady(post.status);
     const posts=old?data.posts.map(p=>p.id===old.id?post:p):[...data.posts,post];
     if(post.date){ui.selected=post.date;ui.month=post.date.slice(0,7);}
-    commit({...data,posts});
+    commit({...data,posts});savedLocally=true;
+    editingId=post.id;$('post-id').value=post.id;initialForm=JSON.stringify(formValue());
+    $('delete-post').hidden=false;$('duplicate-post').hidden=false;
+    await photos.save(post);
     const nextView=post.status==='published'?'published':editorIntent==='schedule'&&post.date?'calendar':!post.date||ui.view==='published'?'library':ui.view;
     ui.query='';ui.status='all';ui.platform='all';$('global-search').value='';history.replaceState(null,'',`#${nextView}`);render();closeEditor();notify(old?'변경 내용을 저장했습니다.':'콘텐츠를 저장했습니다.');
-  } catch(error){$('form-error').textContent=error.message;$('form-error').hidden=false;}
+  } catch(error){$('form-error').textContent=(savedLocally?'원고는 저장됐습니다. 사진 작업을 다시 시도해 주세요. ':'')+error.message;$('form-error').hidden=false;}
+  finally {setSaving(false);}
 });
 $('delete-post').onclick=async()=>{
+  if(saving)return;
   const post=data.posts.find(p=>p.id===editingId);if(!post)return;
-  if(!await requestConfirm('이 기록을 삭제할까요?',`“${post.title}”을 캘린더에서 지웁니다. SNS에 발행한 글은 그대로 유지됩니다.`,'기록 삭제'))return;
-  try {commit({...data,posts:data.posts.filter(p=>p.id!==post.id)});closeEditor();notify('기록을 삭제했어요.',()=>{try{commit({...data,posts:[...data.posts.filter(p=>p.id!==post.id),post]});notify('기록을 복원했어요.');}catch(e){notify(e.message);}});}catch(e){$('form-error').textContent=e.message;$('form-error').hidden=false;}
+  if(!await requestConfirm('이 기록을 삭제할까요?',`“${post.title}”을 캘린더에서 지웁니다. SNS에 발행한 글은 그대로 유지됩니다.${cloud.configured?' 실행 취소 시간이 지나면 보관한 사진도 삭제됩니다.':''}`,'기록 삭제'))return;
+  try {await photos.beforeDelete(post);commit({...data,posts:data.posts.filter(p=>p.id!==post.id)});closeEditor();notify('기록을 삭제했어요.',()=>{try{commit({...data,posts:[...data.posts.filter(p=>p.id!==post.id),post]});notify('기록을 복원했어요.');}catch(e){notify(e.message);}});}catch(e){$('form-error').textContent=e.message;$('form-error').hidden=false;}
 };
 $('duplicate-post').onclick=()=>{
+  if(saving)return;
+  photoRecordId=crypto.randomUUID();photos.open(photoRecordId,false);
   editorIntent='edit';
   editingId='';$('post-id').value='';$('post-title').value=`${$('post-title').value.slice(0,154)} (복제)`;$('post-status').value='draft';$('post-url').value='';$('post-date').value='';
-  $('editor-title').textContent='콘텐츠 복제';$('editor-eyebrow').textContent='채널과 날짜를 바꿔 새 기록으로 저장하세요.';$('delete-post').hidden=true;$('duplicate-post').hidden=true;syncForm();$('post-platform').focus();
+  $('editor-title').textContent='콘텐츠 복제';$('editor-eyebrow').textContent='채널과 날짜를 바꿔 새 기록으로 저장하세요.';notify('원고를 복제했습니다. 사진은 새로 첨부해 주세요.');$('delete-post').hidden=true;$('duplicate-post').hidden=true;syncForm();$('post-platform').focus();
 };
 async function copyBody(post) {try{await navigator.clipboard.writeText(post.text);notify('본문을 복사했습니다.');}catch{openEditor(post);$('post-text').focus();$('post-text').select();notify('본문을 선택했습니다. 복사 단축키를 눌러 주세요.');}}
+$('photo-open-settings').onclick=async()=>{await tryCloseEditor();if(!editor.open){location.hash='#settings';$('photo-email').focus();}};
 $('copy-post').onclick=async()=>{try{await navigator.clipboard.writeText($('post-text').value);notify('본문을 복사했습니다.');}catch{$('post-text').focus();$('post-text').select();notify('본문을 선택했습니다. 복사 단축키를 눌러 주세요.');}};
 
 
@@ -221,7 +250,7 @@ window.addEventListener('hashchange',()=>{if(location.hash==='#main-content'){$(
 function refreshDay(){if(todayKey()!==ui.today&&!editor.open){const wasToday=ui.selected===ui.today;ui.today=todayKey();if(wasToday){ui.selected=ui.today;ui.month=ui.today.slice(0,7);}render();}}
 window.addEventListener('focus',refreshDay);
 document.addEventListener('visibilitychange',()=>{if(!document.hidden)refreshDay();});
-window.addEventListener('beforeunload',e=>{if(editor.open&&JSON.stringify(formValue())!==initialForm){e.preventDefault();e.returnValue='';}});
+window.addEventListener('beforeunload',e=>{if(editor.open&&(saving||photos.dirty||photos.selecting||JSON.stringify(formValue())!==initialForm)){e.preventDefault();e.returnValue='';}});
 function reloadStoredData() {
   const next=store.load(SEED_POSTS);storageLocked=Boolean(next.warning);
   if(next.warning){$('storage-warning').textContent=next.warning;$('storage-warning').hidden=false;notify(next.warning);return;}
@@ -250,7 +279,7 @@ $('import-file').onchange=async e=>{
     const detail=storageLocked?`보관 중인 원본을 먼저 내려받아 두세요. 검증한 백업의 ${imported.posts.length}개 기록으로 복구합니다.`:`새 기록 ${added}개 추가, 기존 기록 ${updated}개 갱신, ${kept}개 유지합니다. 현재 주간 목표는 유지됩니다.`;
     if(!await requestConfirm(title,detail,storageLocked?'백업으로 복구':'병합하기'))return;
     const next=storageLocked?imported:store.merge(data,imported);
-    store.save(next);data=next;storageLocked=false;$('storage-warning').hidden=true;render();notify('백업을 가져왔어요.');
+    store.save(next);data=next;storageLocked=false;$('storage-warning').hidden=true;render();notify('백업을 가져왔어요.');void photos.cleanup();
   }catch(error){notify(error.message);}finally{e.target.value='';}
 };
 $('post-platform').innerHTML=CHANNELS.map(c=>`<option value="${c.id}">${c.label}</option>`).join('');

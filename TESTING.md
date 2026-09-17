@@ -4,9 +4,19 @@
 
 `npm run check`, `npm test`, `npm run build`.
 
-The 20 automated tests cover KST midnight, leap days/year rollover, Monday-first 42-cell legacy calendars, compact 28/35/42-cell month calendars, supported record dates, multilingual content, unsafe URL rejection, filtering without mutation, future publication stats, streaks, persisted empty data, corrupt storage, whole-file import validation, storage quota failures, freshness-aware merge, YouTube round trips, and legacy idea/status compatibility. Storage tests also exercise stale writes before a storage event arrives, snapshot refresh, external deletion, and explicit recovery.
+The original 20 model tests cover KST midnight, leap days/year rollover, Monday-first 42-cell legacy calendars, compact 28/35/42-cell month calendars, supported record dates, multilingual content, unsafe URL rejection, filtering without mutation, future publication stats, streaks, persisted empty data, corrupt storage, whole-file import validation, storage quota failures, freshness-aware merge, YouTube round trips, and legacy idea/status compatibility. Storage tests also exercise stale writes before a storage event arrives, snapshot refresh, external deletion, and explicit recovery.
 
 The cross-tab guard compares a saved snapshot before writing. It is an optimistic check, not an atomic lock; these tests do not prove that simultaneous writes from separate tabs cannot race.
+
+## Supabase photo verification — 0.3 prepared, not released
+
+The suite now includes 32 Node tests. The 12 photo transport tests cover MIME/signature/size limits, encoded record IDs, public-only configuration, allowlist login, unavailable session storage, owner paths, authenticated private reads, pagination, deterministic retry at the ten-file limit, token refresh, denied-session recovery, local logout and incomplete deletion detection. These use mocked REST and do not prove hosted RLS.
+
+`tests/photo-browser.mjs` adds 11 isolated Chromium scenarios: staged cancel, upload/reload/remove/publish, zero remote writes on failed local save, upload retry preserving the same record, visible failed cleanup and retry, independent duplication, deletion undo, grace-expiry cleanup, logged-out deletion queue, replacement at ten photos, and 360px/short-height layouts. Set `PLAYWRIGHT_MODULE`, `CHROMIUM_PATH` and optionally `QA_URL`; no runtime/browser dependency is added to the app. Generated evidence is ignored under `artifacts/qa-supabase/`.
+
+All 11 existing calendar/record/import/keyboard/mobile browser scenarios and the 11 mocked photo scenarios passed. The private-preview check also verifies images decode, not only that an `<img>` exists. Syntax/build/diff checks and public/secret/missing-pair build configuration checks passed. An independent UI/lifecycle review found two issues (restore timing and offline deletion), both fixed and approved. Mobile screenshots were inspected at 360×740 and 360×500; direct visual inspection substitutes for the unavailable visual-verdict skill.
+
+**Still required:** use the newly connected Supabase plugin in a new conversation to provision a Free project and operator, execute the RLS setup, verify actual anonymous/second-user denial and owner upload/download/delete, configure Vercel and verify the live deployment. See [supabase/README.md](supabase/README.md). Current production remains the previously verified 0.2.1 mobile release; the photo feature is not yet live.
 
 ## Browser acceptance
 

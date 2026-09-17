@@ -1,5 +1,14 @@
 # Changelog
 
+## 0.3.0 — unreleased, Supabase setup pending
+
+- Add private photo selection, previews, download and staged removal with Supabase email/password admin access.
+- Preserve v1 browser-local records and commit writing before photo uploads or publication cleanup.
+- Keep failed uploads retryable under the same ID; show persistent cloud-cleanup errors.
+- Keep photos during record deletion undo grace, with a local retry journal.
+- Add private-bucket/allowlist RLS setup, public-only build configuration and REST/browser tests without new dependencies.
+- Live Supabase provisioning, owner/unauthorized access checks and production release remain pending.
+
 ## 0.2.1 — 2026-09-17
 
 - Tighten mobile header, library and filter spacing while retaining 44px controls.
