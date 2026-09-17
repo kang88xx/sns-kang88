@@ -20,18 +20,24 @@ Requested 2026-09-17. Workspace: /mnt/j/01_Project/SNS.
 6. Test upload/save/reload/publish/delete, cancellation, duplicate ownership, quota/network failures, import compatibility, and existing CRUD/keyboard flows. Inspect 360/390/768/1440px screens and a short mobile viewport.
 7. Independent review, checks/build, PR/CI/merge and verified production deployment under existing project authorization. Keep setup blockers explicit.
 
-## Open decisions
+## Supabase decision — accepted 2026-09-17
 
-- User has no existing store and expects under 1 GB. Recommend Vercel Blob private storage on the current Vercel Pro team, with an authenticated server API and the official SDK. Provider/SDK choice has been requested and remains pending.
-- Vercel project has no storage/auth environment variables. Local CLI management access is available; no store has been created.
-- Pro Blob is usage-based, using monthly credits before on-demand billing, rather than the Hobby free 1 GB allowance. The official default-region table lists storage at $0.023/GB-month, with operations and transfer charged separately: https://vercel.com/docs/vercel-blob/usage-and-pricing
-- Alternative: Supabase Free includes 1 GB file storage and Auth but requires another provider setup and pauses after a week of inactivity: https://supabase.com/pricing
-- Photo limits and deletion retry semantics: finalize from verified storage constraints before implementation.
+- User selected Supabase Free, under 1 GB photo storage. No paid tier or new npm dependency.
+- Private `content-photos` bucket, email/password admin login, explicit owner allowlist and owner-folder RLS. Browser gets only public project URL/key; never secret/service-role keys.
+- JPEG/PNG/WebP, 6 MiB per file, ten photos per record in the UI. Storage bucket enforces type and per-file size.
+- Preserve v1 records; remote object paths use owner UID and encoded stable record ID. Photos are not embedded in JSON backups. Duplicates start without photos.
+- Local selection and removal are staged until record save succeeds. Uploads retain random names across retries. Publication saves first, then deletes; unavailable cleanup stays visible and retries on login/online/manual action.
+- Record deletion reserves a durable cleanup intent before local removal; 20-second grace exceeds the 16-second undo window. Restored records cancel cleanup. No cross-tab atomicity claim.
+- Supabase account plugin connection confirmed by user; actual project provisioning and live authorization verification remain pending.
 
 ## Status
 
 Mobile CSS and removal of the inert name decoration are implemented for v0.2.1. Targeted mobile checks, five existing UI regression scenarios, 20 Node tests and the static build pass. Mobile changes were merged through PR #3 and deployed; production verified at 19:02 Asia/Seoul with seven matching file hashes, existing seeded save/reload, absent name marker, single-row mobile filters and reachable save controls on a short viewport.
 
-Photo implementation is pending the cloud/SDK selection. No cloud storage or photo deletion has been provisioned or verified yet.
+Supabase photo code and SQL are prepared. The 32 Node tests, 11 existing browser scenarios and 11 mocked photo scenarios pass; configuration rejects secret keys and incomplete public settings. Independent UI/lifecycle review approved after fixes. No new dependency or v1 record schema change.
+
+The user confirmed `kang88xx's projects` (Free, Vercel Marketplace-managed) and the administrator email. Created isolated Seoul project `sns-kang88` (`ijflzexbgrzhrjcoljja`) at $0/month, configured the private bucket/RLS and operator allowlist, and connected Production/Preview environment variables. The unrelated `kmir-db` is unchanged. Seven actual API/RLS checks and four real-provider browser checks pass. Both Supabase advisors report zero findings after caching the allowlist policy's `auth.uid()` per statement. The build contains only public configuration; deployment inputs now exclude local context, generated output, and agent files.
+
+The Vercel preview is ready, with all ten public files returning 200 (HTML adds the provider's preview toolbar). The remaining gate is disabling public Auth signups through the authenticated dashboard; the current MCP cannot update Auth configuration and the user has been asked to save that toggle. Once the Auth endpoint confirms the restriction, release PR #4 and verify production photo/record/mobile behavior. The temporary QA account, sessions and photo objects have been cleaned up; only the allowed operator remains. Keep the feature PR in draft until the release gates pass. Follow `supabase/README.md`; no new conversation or plugin reconnect is required.
 
 The proposed photo API/lifecycle contract is retained in ignored `artifacts/qa-v3/cloud-contract.md`. It uses owner-only sessions, encoded record prefixes, unchanged v1 records and publication-save-before-delete ordering.

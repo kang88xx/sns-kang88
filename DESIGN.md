@@ -38,15 +38,16 @@ Local load is immediate. Empty calendar day offers add action; empty search offe
 Short Korean labels: 보관, 작성 중, 준비 완료, 게시 예정, 발행 완료. Button '저장' never suggests network publication. '발행 완료' is a manual record status. Storage description explains browser-only persistence and backups.
 
 ## Implementation constraints
-No framework or new runtime dependencies. Static ES modules, vanilla CSS/HTML, Node built-in tests. Vercel deployment with public seeded records only; no draft text in server logs. Build output is the seven-file static whitelist. localStorage versioned JSON and validated import/export. User-entered text never interpolated unescaped into HTML; external links only http/https. Date arithmetic UTC date-only, display/context Asia/Seoul. No credentials committed.
+No framework or new runtime dependencies. Static ES modules, vanilla CSS/HTML, Node built-in tests. Vercel deployment with public seeded records only; no draft text in server logs. Build output uses an explicit static whitelist, including the photo modules and generated public cloud configuration. localStorage versioned JSON and validated import/export. User-entered text never interpolated unescaped into HTML; external links only http/https. Date arithmetic UTC date-only, display/context Asia/Seoul. No credentials committed.
 
 ## Open questions
-- [ ] Photo cloud provider and owner access setup: user selection pending between the recommended Vercel Blob setup and Supabase. This affects only the new cloud-photo work.
+- [x] Supabase Free Seoul project, private bucket, owner account and deployment environment configured; real owner/unauthorized access checks pass.
+- [ ] Confirm public signup is disabled and verify the production photo release.
 - Existing writing remains browser-local with backup/export. Chinese-class is reference-only; current project work belongs in /mnt/j/01_Project/SNS.
 
 ## 0.3 work in progress — photos and mobile
 
-The library will hold photo attachments alongside unpublished writing. Marking a record published retains its text/date/link and removes its cloud photos after the publication record is saved. Show that consequence in the editor; show recoverable progress/errors for upload and deletion. Photo access must be restricted to the owner. The cloud provider/access setup is being confirmed; cloud photo storage is not yet available.
+The library will hold photo attachments alongside unpublished writing. Marking a record published retains its text/date/link and removes its cloud photos after the publication record is saved. Show that consequence in the editor; show recoverable progress/errors for upload and deletion. Photo access must be restricted to the owner. Supabase Free is selected. The editor adds a labelled photo area below the body, two columns on mobile and three on desktop. Photos require an allowlisted admin login in Settings. Pending photos have local previews; save uploads them, cancel discards selections. Removal is staged until save. Publishing warns that cloud photos will be deleted, with a persistent retry notice if cleanup fails. Record deletion keeps a 20-second photo grace period for the existing undo action. Duplication copies writing and starts a separate photo folder. Only photos use the cloud; original v1 record backups remain unchanged.
 
 Reuse the existing surfaces, typography and navigation. Mobile spacing in the header, filters and library toolbar is reduced; status filters use one horizontally scrollable row with 44px touch targets. Date selection and the full editing form remain usable at 360px and short viewport heights, with save controls reachable and the form body scrollable. The inert bottom-left name decoration is removed. Preserve desktop layout and existing keyboard focus behavior.
 

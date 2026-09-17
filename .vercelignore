@@ -2,7 +2,11 @@
 .env*
 .omx
 .gstack
+.agents
+.codex
 artifacts
+context
+dist
 test-results
 node_modules
 ._*
