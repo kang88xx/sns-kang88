@@ -13,7 +13,7 @@ User request, 2026-09-17. Current workspace: /mnt/j/01_Project/SNS. Previous mac
 3. Done: Ideas replaced with Content Library for all unpublished records. Empty-date creation, full body storage, quick scheduling, publish-record action, copy, separate Published history, #ideas/#posts aliases and explicit all-content search scope are in place.
 4. Done: YouTube added through the existing channel registry and reusable SVG channel icons.
 5. Done: Desktop/mobile visual checks and 11 browser scenarios cover create→reload→schedule→published, compact months, duplicate icons, global search/filter reset, copy and permission fallback, preserved records, backup/recovery, stale edits, save errors and keyboard focus. Fixed stale search filters and the destination of undated duplicates made while scheduling.
-6. Review and local checks/build passed. Pending: push/PR/merge, deploy and verify https://sns.kang88.io.
+6. Done: independent review, checks/build, PR #2 merge and Vercel production deployment. https://sns.kang88.io verified against all seven local source files, with seeded details and isolated-browser save/reload.
 
 ## Cleanup inventory
 - Remove duplicated motivational copy, extra overview tiles, unused idea/tip/event-title CSS after UI replacement.
@@ -33,4 +33,5 @@ User request, 2026-09-17. Current workspace: /mnt/j/01_Project/SNS. Previous mac
 - Visual evidence: `artifacts/qa-v2/calendar-1440.png`, `artifacts/qa-v2/calendar-360.png`, `artifacts/qa-v2/many-icons-360.png`, `artifacts/qa-v2/editor-360.png`.
 - Browser evidence: `artifacts/qa-v2/browser-results.json` and `browser-results-targeted.json`; all 11 scenarios passed across the full run and targeted reruns after local navigation timing failures. No application JavaScript errors were observed.
 - All seven build files match source bytes; independent final code review approved with no outstanding findings.
-- Pending: production deployment verification. Do not mark deployment complete until HTTPS 200, module loading, seeded post details and local persistence are verified on https://sns.kang88.io.
+- Production verified 2026-09-17 at 17:45 Asia/Seoul: HTTPS 200, all seven files match local SHA-256, 35 September cells/two icons, full seeded text and URL survive save/reload. See DEPLOYMENT.md.
+- Status: complete.

@@ -9,7 +9,7 @@
 - Keep browser-local storage, validated backup/import, corrupt-storage recovery and stale-edit warnings unchanged.
 - Update the build script to copy the same seven static output files with read/write operations on the Windows-mounted workspace.
 - Fix stale channel filters in global search, undated duplicate navigation and body-copy permission fallback.
-- Production deployment verification is pending.
+- Deploy to sns.kang88.io and verify exact app files, seeded content and browser-local save/reload.
 
 ## 0.1.0 — 2026-09-17
 
