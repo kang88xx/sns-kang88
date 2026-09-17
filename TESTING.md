@@ -20,7 +20,9 @@ All 11 existing calendar/record/import/keyboard/mobile browser scenarios and the
 
 **Hosted checks:** Seven actual Supabase API/RLS checks pass: operator login, upload/list/private-byte download/session restore/delete, anonymous denial, second-user denial and inability to self-allowlist, cross-folder denial, and oversized/non-image rejection. Four browser checks using real Supabase pass: login/upload/save/reload/decoded preview, staged cancel/removal, publication followed by zero remaining photos, and simulated upload-failure retry. Both security and performance advisors report zero findings. The Vercel preview returns 200 for all ten files; nine are byte-exact, and HTML matches after accounting for the exact provider-added preview toolbar. Evidence and optional runners are retained in ignored `artifacts/qa-supabase-live/` and `artifacts/qa-supabase/preview-deployment.json`.
 
-**Still required:** verify public signup is disabled, release and verify production, then remove the temporary QA account. See [supabase/README.md](supabase/README.md). Current production remains the previously verified 0.2.1 mobile release; the photo feature is not yet live. No new conversation or plugin reconnect is required.
+The hosted test helpers were strengthened to reject unexpected/network errors instead of treating them as authorization denials, and browser cleanup now checks the exact record folders and publication-before-delete ordering. All seven API and four browser checks passed again. The temporary QA account was signed out and removed; the database confirms one operator, one allowlist row, and zero photos. Temporary local administrative environment files were removed. A six-check local rehearsal of the production runner also passed; its HTTPS check was explicitly skipped on localhost and does not establish production success.
+
+**Still required:** verify public signup is disabled, then release and verify production. See [supabase/README.md](supabase/README.md). Current production remains the previously verified 0.2.1 mobile release; the photo feature is not yet live. No new conversation or plugin reconnect is required.
 
 ## Browser acceptance
 
