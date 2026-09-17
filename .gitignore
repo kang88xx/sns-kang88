@@ -1,0 +1,10 @@
+.DS_Store
+._*
+node_modules/
+.vercel/
+.omx/
+.gstack/
+.env*
+!.env.example
+test-results/
+artifacts/
