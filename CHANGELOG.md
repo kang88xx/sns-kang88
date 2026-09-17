@@ -7,4 +7,4 @@
 - Add duplicate, delete/undo, weekly goals, and validated JSON backup/import.
 - Keep corrupt data intact, report save failures, and reject detected stale edits across tabs.
 - Adapt the owner's Chinese-class UI and responsive navigation.
-- Start with today's two public LinkedIn/X records and configure sns.kang88.io deployment.
+- Start with today's two public LinkedIn/X records and deploy to sns.kang88.io.
