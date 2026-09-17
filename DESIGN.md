@@ -32,7 +32,7 @@ Semantic buttons and links, labelled fields, aria-current nav, aria-pressed filt
 Desktop month + right day panel. Below 1000px selected day panel under grid. Below 900px bottom navigation replaces rail, header stacks, main padding shrinks. Below 600px calendar cells show short channel marks/counts with full accessible names; never force a 7-column desktop card width. No horizontal page overflow at 360px.
 
 ## Interaction states
-Local load is immediate. Empty calendar day offers add action; empty search offers reset. Save errors keep dialog open. Corrupt storage is not overwritten automatically. JSON import validates first and merges by stable ID with preview/confirmation; current data retained for failure. Deletion undo available. Data export is available without network. No auto-publish semantics.
+Local load is immediate. Empty calendar day offers add action; empty search offers reset. Save errors keep dialog open. Corrupt storage is not overwritten automatically. Normal JSON import validates first and merges by stable ID with preview/confirmation, replacing only newer records and retaining current settings. Explicit corrupt-storage recovery replaces records and settings with the validated backup; failed validation or writing retains stored data. Detected changes in another tab block an open editor until it is closed and reopened; the pre-save snapshot check is not an atomic cross-tab lock. Deletion undo available. Data export is available without network. No auto-publish semantics.
 
 ## Content voice
 Short Korean labels: 계획, 초안, 준비 완료, 발행 완료, 아이디어. Button '저장' never suggests network publication. '발행 완료' is a manual record status. Storage description explains browser-only persistence and backups.
