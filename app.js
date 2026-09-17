@@ -15,8 +15,8 @@ const loaded = store.load(SEED_POSTS);
 let data = {posts:loaded.posts,settings:loaded.settings};
 let storageLocked = Boolean(loaded.warning);
 let externalChange = false;
-const ui = {today:todayKey(),month:todayKey().slice(0,7),selected:todayKey(),mode:'month',platform:'all',status:'all',query:'',sort:'date-desc',view:'calendar'};
-let editingId = '', initialForm = '', returnFocus = null, returnFocusSelector = '', toastTimer;
+const ui = {today:todayKey(),month:todayKey().slice(0,7),selected:todayKey(),mode:'month',platform:'all',status:'all',query:'',sort:'updated',view:'calendar'};
+let editingId = '', editorIntent = 'edit', initialForm = '', returnFocus = null, returnFocusSelector = '', toastTimer;
 let confirmResolve = null;
 const editor = $('post-dialog');
 const confirmation = $('confirm-dialog');
@@ -44,79 +44,91 @@ $('confirm-cancel').onclick = () => resolveConfirm(false);
 confirmation.addEventListener('cancel', e => {e.preventDefault();resolveConfirm(false);});
 $('toast-close').onclick = () => {$('toast').hidden = true;};
 
+function channelIcon(id) {
+  const paths = {
+    linkedin:'<path d="M6 10h3v9H6zm1.5-5a1.7 1.7 0 1 0 0 3.4A1.7 1.7 0 0 0 7.5 5ZM11 10h2.8v1.2c.6-.9 1.6-1.5 2.8-1.5 2.5 0 3.4 1.6 3.4 4.2V19h-3v-4.5c0-1.3-.3-2.1-1.4-2.1-1.2 0-1.6.8-1.6 2.1V19h-3z" fill="white"/>',
+    x:'<path d="M4 3h5l11 18h-5L4 3zm1.8 1.5L15.9 19.5h2.3L8.1 4.5z" fill="currentColor"/><path d="m19 3-6.5 7.5M4 21l7-8" stroke="currentColor" stroke-width="1.8"/>',
+    threads:'<path d="M19 7c-1-3-4-4-7-4-5 0-8 3.5-8 9s3 9 8 9c4 0 7-2 7-5.5 0-3-3-5-6-5-3.5 0-5 1.4-5 3.2s1.6 3 3.5 3c3.5 0 4.8-2.1 4.8-5 0-3-1.4-5-4-5-1.6 0-2.8.5-3.8 1.7" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>',
+    instagram:'<rect x="3" y="3" width="18" height="18" rx="5" fill="none" stroke="currentColor" stroke-width="2"/><circle cx="12" cy="12" r="4" fill="none" stroke="currentColor" stroke-width="2"/><circle cx="17.5" cy="6.5" r="1.3" fill="currentColor"/>',
+    youtube:'<path d="m10 8 7 4-7 4z" fill="white"/>',
+    blog:'<rect x="5" y="2" width="14" height="20" rx="2" fill="none" stroke="currentColor" stroke-width="2"/><path d="M8 7h8M8 11h8M8 15h5" stroke="currentColor" stroke-width="2"/>',
+    other:'<circle cx="5" cy="12" r="2" fill="currentColor"/><circle cx="12" cy="12" r="2" fill="currentColor"/><circle cx="19" cy="12" r="2" fill="currentColor"/>'
+  };
+  return `<svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">${paths[id]||paths.other}</svg>`;
+}
 function badge(p) {
-  const c = channel(p.platform), s = status(p.status);
-  return `<span class="channel-badge" style="--channel-color:${c.color}"><span class="channel-mark">${esc(c.short)}</span>${esc(c.label)}</span><span class="status-badge ${s.id}">${esc(s.label)}</span>`;
+  const c=channel(p.platform), st=status(p.status);
+  return `<span class="channel-badge"><span class="channel-mark" style="--channel-color:${c.color}">${channelIcon(c.id)}</span>${esc(c.label)}</span><span class="status-badge ${st.id}">${esc(st.label)}</span>`;
 }
-function card(p, compact = false) {
-  return `<article class="${compact?'day-card':'post-card'}" style="--channel-color:${channel(p.platform).color}">
-    <button type="button" class="card-open" data-edit="${esc(p.id)}" aria-label="${esc(p.title)} · ${esc(channel(p.platform).label)} 편집">
-      <span class="post-top">${badge(p)}</span><span class="post-title">${esc(p.title)}</span>
-      <span class="post-meta">${p.date?esc(dateLabel(p.date)):'날짜 미정'}${p.time?' · '+esc(p.time):''} · ${langs[p.language]}</span>
-      ${!compact && (p.text||p.notes)?`<span class="post-excerpt">${esc((p.text||p.notes).slice(0,130))}</span>`:''}
-    </button><div class="card-actions">${p.url?`<a class="text-link" href="${esc(p.url)}" target="_blank" rel="noopener noreferrer">발행한 글 ↗</a>`:'<span></span>'}<button class="text-link" data-edit="${esc(p.id)}">${p.status==='published'?'기록 보기':'이어서 작성'} →</button></div></article>`;
+function card(p, compact=false) {
+  const actions=p.status==='published'?(p.url?`<a class="text-link" href="${esc(p.url)}" target="_blank" rel="noopener noreferrer">원문 열기 ↗</a>`:'<span></span>'):`<button class="text-link" data-schedule="${esc(p.id)}">${p.date?'날짜 변경':'일정 잡기'}</button><button class="text-link" data-publish="${esc(p.id)}">발행 기록</button>`;
+  return `<article class="${compact?'day-card':'post-card'}" style="--channel-color:${channel(p.platform).color}"><button type="button" class="card-open" data-edit="${esc(p.id)}" aria-label="${esc(p.title)} · ${esc(channel(p.platform).label)} 편집"><span class="post-top">${badge(p)}</span><span class="post-title">${esc(p.title)}</span><span class="post-meta">${p.date?esc(dateLabel(p.date)):'날짜 미정'}${p.time?' · '+esc(p.time):''} · ${langs[p.language]}</span>${!compact&&(p.text||p.notes)?`<span class="post-excerpt">${esc((p.text||p.notes).slice(0,130))}</span>`:''}</button><div class="card-actions">${actions}${p.text?`<button class="text-link" data-copy="${esc(p.id)}">본문 복사</button>`:''}</div></article>`;
 }
-function empty(title, copy, action = '', label = '새 게시물') {
-  return `<div class="empty-state"><span class="empty-icon" aria-hidden="true">＋</span><h3 class="empty-title">${esc(title)}</h3><p class="empty-copy">${esc(copy)}</p>${action?`<button class="btn btn-tonal" data-action="${action}">${esc(label)}</button>`:''}</div>`;
+function empty(title, copy, action='',label='콘텐츠 저장') {
+  return `<div class="empty-state"><h3 class="empty-title">${esc(title)}</h3>${copy?`<p class="empty-copy">${esc(copy)}</p>`:''}${action?`<button class="btn btn-tonal" data-action="${action}">${esc(label)}</button>`:''}</div>`;
 }
-function filtered(forPosts = false) {
-  return filterPosts(data.posts,{platform:ui.platform,status:forPosts?ui.status:'all',query:ui.query});
-}
+function filtered() {return filterPosts(data.posts,{platform:ui.platform,query:ui.query});}
+function calendarDates() {const w=weekRange(ui.selected);return ui.mode==='month'?monthGrid(ui.month,{compact:true}):Array.from({length:7},(_,i)=>addDays(w.start,i));}
 function renderChannels() {
-  const base = filterPosts(data.posts,{query:ui.query});
-  const markup = [{id:'all',label:'전체',short:'',color:'',count:base.length},...CHANNELS.map(c=>({...c,count:base.filter(p=>p.platform===c.id).length}))].map(c=>
-    `<button class="channel-chip ${ui.platform===c.id?'active':''}" aria-pressed="${ui.platform===c.id}" data-channel="${c.id}">${c.short?`<span class="channel-mark" style="--channel-color:${c.color}">${esc(c.short)}</span>`:''}<span class="channel-label">${c.label}</span><span class="channel-count">${c.count}</span></button>`).join('');
-  $('calendar-channels').innerHTML = markup; $('posts-channels').innerHTML = markup;
+  const base=filterPosts(data.posts,{query:ui.query}), dates=calendarDates();
+  const groups=[['calendar-channels',base.filter(p=>p.date>=dates[0]&&p.date<=dates.at(-1))],['library-channels',base.filter(p=>ui.query||p.status!=='published')],['published-channels',base.filter(p=>p.status==='published')]];
+  for(const [id,posts] of groups)$(id).innerHTML=[{id:'all',label:'전체',count:posts.length},...CHANNELS.map(c=>({...c,count:posts.filter(p=>p.platform===c.id).length}))].map(c=>`<button class="channel-chip ${ui.platform===c.id?'active':''}" aria-pressed="${ui.platform===c.id}" data-channel="${c.id}">${c.id!=='all'?`<span class="channel-mark" style="--channel-color:${c.color}">${channelIcon(c.id)}</span>`:''}<span class="channel-label">${c.label}</span><span class="channel-count">${c.count}</span></button>`).join('');
 }
 function renderSummary() {
-  const stats = getStats(data.posts,ui.today), goal = data.settings.weeklyGoal;
-  const pct = Math.min(100,Math.round(stats.weekPublished/goal*100));
-  $('summary').innerHTML = `<div class="summary-card goal-card"><div class="goal-heading"><span class="stat-label">이번 주 발행</span><span class="goal-percent">${pct}%</span></div><div class="stat-value">${stats.weekPublished}<span> / ${goal}개</span></div><div class="goal-progress" role="progressbar" aria-label="주간 발행 목표" aria-valuemin="0" aria-valuemax="${goal}" aria-valuenow="${Math.min(stats.weekPublished,goal)}"><span style="width:${pct}%"></span></div><span class="stat-note">${stats.weekPublished>=goal?'이번 주 목표를 채웠어요.':`목표까지 ${goal-stats.weekPublished}개 남았어요.`}</span></div>
-  <div class="summary-card blue"><span class="stat-label">이번 주 계획</span><div class="stat-value">${stats.weekPlanned}<span>개</span></div><span class="stat-note">게시를 준비하는 일정</span></div>
-  <div class="summary-card amber"><span class="stat-label">작성 중인 초안</span><div class="stat-value">${stats.draftCount}<span>개</span></div><span class="stat-note">나의 다음 이야기</span></div>
-  <div class="summary-card green"><span class="stat-label">연속 발행</span><div class="stat-value">${stats.streak}<span>일</span></div><span class="stat-note">전체 발행 기록 ${stats.publishedCount}개</span></div>`;
+  const stats=getStats(data.posts,ui.today),goal=data.settings.weeklyGoal;
+  const saved=data.posts.filter(p=>p.status!=='published').length;
+  const planned=data.posts.filter(p=>p.status==='planned').length;
+  const overdue=data.posts.filter(p=>p.status==='planned'&&p.date<ui.today).length;
+  $('summary').innerHTML=`<button class="overview-item" data-open-library="all"><span>보관 중</span><strong>${saved}</strong></button><button class="overview-item" data-open-library="planned"><span>게시 예정</span><strong>${planned}</strong></button>${overdue?`<button class="overview-item overdue" data-open-library="overdue"><span>지난 일정</span><strong>${overdue}</strong></button>`:''}<a class="overview-item goal-overview" href="#published"><span>이번 주 발행</span><strong>${stats.weekPublished}<small> / ${goal}</small></strong></a>`;
 }
 function renderCalendar() {
-  const week = weekRange(ui.selected);
-  const dates = ui.mode==='month'?monthGrid(ui.month):Array.from({length:7},(_,i)=>addDays(week.start,i));
-  $('month-label').textContent = ui.mode==='month'?`${Number(ui.month.slice(0,4))}년 ${Number(ui.month.slice(5))}월`:`${dateLabel(week.start,{weekday:undefined})} – ${dateLabel(week.end,{weekday:undefined})}`;
+  const week=weekRange(ui.selected),dates=calendarDates();
+  $('month-label').textContent=ui.mode==='month'?`${Number(ui.month.slice(0,4))}년 ${Number(ui.month.slice(5))}월`:`${dateLabel(week.start,{weekday:undefined})} – ${dateLabel(week.end,{weekday:undefined})}`;
   document.querySelectorAll('[data-mode]').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.mode===ui.mode)));
-  const posts = filtered().filter(p=>p.status!=='idea');
+  const posts=filtered().filter(p=>p.date);
   $('calendar-grid').classList.toggle('week-view',ui.mode==='week');
-  $('calendar-grid').innerHTML = dates.map(date=>{
-    const items = posts.filter(p=>p.date===date), current = date===ui.today;
-    const classes = ['calendar-cell', date.slice(0,7)!==ui.month&&ui.mode==='month'?'outside':'',date===ui.selected?'selected':'',current?'is-today':'',items.length?'has-posts':''].join(' ');
-    return `<button class="${classes}" data-date="${date}" tabindex="${date===ui.selected?0:-1}" aria-pressed="${date===ui.selected}" ${current?'aria-current="date"':''} aria-label="${esc(dateLabel(date,{year:'numeric'}))}, ${items.length?items.map(p=>`${channel(p.platform).label} ${p.title} ${status(p.status).label}`).map(esc).join(', '):'게시물 없음'}"><span class="date-number">${Number(date.slice(-2))}</span><span class="day-events">${items.slice(0,3).map(p=>`<span class="day-event ${p.status}" style="--channel-color:${channel(p.platform).color}"><span class="event-platform">${esc(channel(p.platform).short)}</span><span class="event-title">${esc(p.title)}</span></span>`).join('')}${items.length>3?`<span class="day-more">+${items.length-3}개</span>`:''}</span></button>`;
+  $('calendar-grid').innerHTML=dates.map(date=>{
+    const items=posts.filter(p=>p.date===date),current=date===ui.today;
+    const classes=['calendar-cell',date.slice(0,7)!==ui.month&&ui.mode==='month'?'outside':'',date===ui.selected?'selected':'',current?'is-today':'',items.length?'has-posts':''].join(' ');
+    return `<button class="${classes}" data-date="${date}" tabindex="${date===ui.selected?0:-1}" aria-pressed="${date===ui.selected}" ${current?'aria-current="date"':''} aria-label="${esc(dateLabel(date,{year:'numeric'}))}, ${items.length?items.map(p=>`${channel(p.platform).label} ${p.title} ${status(p.status).label}`).map(esc).join(', '):'게시물 없음'}"><span class="date-number">${Number(date.slice(-2))}</span><span class="day-events">${items.map(p=>`<span class="calendar-post-icon ${p.status}" data-calendar-post="${esc(p.id)}" style="--channel-color:${channel(p.platform).color}" title="${esc(`${channel(p.platform).label} · ${p.title} · ${status(p.status).label}`)}">${channelIcon(p.platform)}</span>`).join('')}</span></button>`;
   }).join('');
-  $('day-title').textContent = dateLabel(ui.selected);
-  $('selected-day-label').textContent = ui.selected===ui.today?'오늘의 게시물':'선택한 날짜';
-  const dayPosts = posts.filter(p=>p.date===ui.selected);
-  $('day-posts').innerHTML = dayPosts.length?dayPosts.map(p=>card(p,true)).join(''):empty('아직 일정이 없어요','이 날짜에 올릴 이야기를 적어보세요.','new-selected','게시물 추가');
-  const upcoming = posts.filter(p=>p.status!=='published' && (!p.date||p.date>=ui.today)).slice(0,3);
-  $('upcoming-posts').innerHTML = upcoming.length?upcoming.map(p=>card(p)).join(''):empty('다음 게시물을 준비해볼까요?','아이디어가 떠오르면 제목만 먼저 남겨도 좋아요.','new','새 게시물');
+  $('day-title').textContent=dateLabel(ui.selected);$('selected-day-label').textContent=ui.selected===ui.today?'오늘':'선택한 날짜';
+  const dayPosts=posts.filter(p=>p.date===ui.selected);
+  $('day-posts').innerHTML=dayPosts.length?dayPosts.map(p=>card(p,true)).join(''):empty('게시 일정이 없습니다.','','new-selected','이날에 추가');
+  const upcoming=posts.filter(p=>p.status!=='published'&&p.date>=ui.today).slice(0,3);
+  $('upcoming-section').hidden=!upcoming.length;
+  $('upcoming-posts').innerHTML=upcoming.map(p=>card(p)).join('');
+  renderChannels();
 }
-function renderPosts() {
-  $('status-filters').innerHTML = [{id:'all',label:'전체'},...STATUSES].map(s=>`<button data-status="${s.id}" class="status-filter ${ui.status===s.id?'active':''}" aria-pressed="${ui.status===s.id}">${s.label}</button>`).join('');
-  let posts = filtered(true);
-  if(ui.sort==='date-desc') posts.sort((a,b)=>(b.date||'0000').localeCompare(a.date||'0000')||b.time.localeCompare(a.time));
-  if(ui.sort==='updated') posts.sort((a,b)=>b.updatedAt.localeCompare(a.updatedAt));
-  $('post-count').textContent = `${posts.length}개의 게시물${ui.query?` · “${ui.query}” 검색 결과`:''}`;
-  $('post-list').innerHTML = posts.length?posts.map(p=>card(p)).join(''):empty('조건에 맞는 게시물이 없어요','다른 검색어를 입력하거나 필터를 초기화해 보세요.','reset-filters','필터 초기화');
-  const ideas = filterPosts(data.posts,{query:ui.query}).filter(p=>p.status==='idea');
-  $('idea-list').innerHTML = ideas.length?ideas.map(p=>card(p)).join(''):empty('생각이 떠오르면 이곳에','날짜를 정하기 전, 글감과 참고 자료를 모아두세요.','new-idea','첫 아이디어 남기기');
+function renderCollections() {
+  const searching=Boolean(ui.query), choices=[{id:'all',label:'전체'},...STATUSES.filter(s=>searching||s.id!=='published'),{id:'overdue',label:'지난 일정'}];
+  $('library-title').textContent=searching?'콘텐츠 검색':'콘텐츠 보관함';
+  $('library-description').textContent=searching?'보관 중인 콘텐츠와 발행 기록에서 검색합니다.':'원고를 저장하고, 준비되면 게시 날짜를 정하세요.';
+  $('status-filters').innerHTML=choices.map(st=>`<button data-status="${st.id}" class="status-filter ${ui.status===st.id?'active':''}" aria-pressed="${ui.status===st.id}">${st.label}</button>`).join('');
+  let posts=filtered().filter(p=>searching||p.status!=='published');
+  if(ui.status==='overdue')posts=posts.filter(p=>p.status==='planned'&&p.date<ui.today);
+  else if(ui.status!=='all')posts=posts.filter(p=>p.status===ui.status);
+  if(ui.sort==='date-desc')posts.sort((a,b)=>(b.date||'0000').localeCompare(a.date||'0000')||b.time.localeCompare(a.time));
+  if(ui.sort==='updated')posts.sort((a,b)=>b.updatedAt.localeCompare(a.updatedAt));
+  $('post-count').textContent=`${posts.length}개${ui.query?` · “${ui.query}”`:''}`;
+  const narrowed=ui.query||ui.platform!=='all'||ui.status!=='all';
+  $('post-list').innerHTML=posts.length?posts.map(p=>card(p)).join(''):narrowed?empty('조건에 맞는 콘텐츠가 없습니다.','','reset-filters','필터 초기화'):empty('저장한 콘텐츠가 없습니다.','게시글이나 영상 원고를 미리 보관하세요.','new','콘텐츠 저장');
+  const published=filtered().filter(p=>p.status==='published').sort((a,b)=>b.date.localeCompare(a.date)||b.time.localeCompare(a.time));
+  $('published-count').textContent=`${published.length}개 발행`;
+  $('published-list').innerHTML=published.length?published.map(p=>card(p)).join(''):ui.platform!=='all'||ui.query?empty('조건에 맞는 발행 기록이 없습니다.','','reset-filters','필터 초기화'):empty('발행 기록이 없습니다.','발행한 콘텐츠의 날짜와 링크를 남기세요.','new-published','발행 기록 추가');
 }
 function showView(focus = false) {
-  const candidate = location.hash.slice(1);
-  ui.view = ['calendar','posts','ideas','settings'].includes(candidate)?candidate:candidate==='main-content'?ui.view:'calendar';
+  const raw=location.hash.slice(1);const candidate=({posts:'library',ideas:'library'})[raw]||raw;
+  ui.view=['calendar','library','published','settings'].includes(candidate)?candidate:candidate==='main-content'?ui.view:'calendar';
+  if(raw==='posts'||raw==='ideas')history.replaceState(null,'',`#${candidate}`);
   document.querySelectorAll('.view').forEach(s=>{s.hidden=s.id!==`view-${ui.view}`;});
   document.querySelectorAll('.rail a').forEach(a=>{const active=a.dataset.view===ui.view;a.classList.toggle('active',active);if(active)a.setAttribute('aria-current','page');else a.removeAttribute('aria-current');});
   if(focus)$(`view-${ui.view}`).querySelector('h1').focus({preventScroll:true});
 }
 function render() {
   ui.today = todayKey(); $('today-pill').textContent = dateLabel(ui.today); $('clear-search').hidden=!ui.query;
-  renderSummary(); renderChannels(); renderCalendar(); renderPosts();
+  showView(); renderSummary(); renderCalendar(); renderCollections();
   if(document.activeElement!==$('weekly-goal'))$('weekly-goal').value = data.settings.weeklyGoal;
-  showView();
 }
 function formValue() {
   return {title:$('post-title').value,platform:$('post-platform').value,status:$('post-status').value,date:$('post-date').value,time:$('post-time').value,language:$('post-language').value,text:$('post-text').value,url:$('post-url').value,notes:$('post-notes').value};
@@ -125,22 +137,22 @@ function syncForm() {
   $('text-count').textContent=`${$('post-text').value.length.toLocaleString('ko-KR')}자`;
   const dated=['planned','published'].includes($('post-status').value);
   $('post-date').required=dated;
-  $('schedule-hint').textContent=$('post-status').value==='published'?'발행한 날짜와 링크를 기록해 주세요. SNS에 게시하는 기능은 아닙니다.':'날짜와 시간은 계획용이며 SNS에 자동으로 게시되지 않습니다.';
+  $('schedule-hint').textContent=$('post-status').value==='published'?'SNS에 발행한 날짜와 링크를 기록합니다.':$('post-date').value?'캘린더 일정만 저장합니다. SNS 게시·예약은 직접 진행하세요.':'날짜 없이 보관함에 저장할 수 있습니다.';
 }
 function openEditor(record = null, overrides = {}) {
-  returnFocus=document.activeElement;
-  returnFocusSelector=returnFocus.id?`#${CSS.escape(returnFocus.id)}`:returnFocus.dataset.edit?`[data-edit="${CSS.escape(returnFocus.dataset.edit)}"]`:returnFocus.dataset.action?`[data-action="${CSS.escape(returnFocus.dataset.action)}"]`:'';
+  editorIntent='edit';returnFocus=document.activeElement;
+  returnFocusSelector=returnFocus.id?`#${CSS.escape(returnFocus.id)}`:returnFocus.dataset.edit?`[data-edit="${CSS.escape(returnFocus.dataset.edit)}"]`:returnFocus.dataset.action?`[data-action="${CSS.escape(returnFocus.dataset.action)}"]`:returnFocus.dataset.schedule?`[data-schedule="${CSS.escape(returnFocus.dataset.schedule)}"]`:returnFocus.dataset.publish?`[data-publish="${CSS.escape(returnFocus.dataset.publish)}"]`:'';
   if(returnFocus.closest('.view')&&returnFocusSelector)returnFocusSelector=`#${returnFocus.closest('.view').id} ${returnFocusSelector}`;
   editingId=record?.id||'';
-  const p={title:'',platform:ui.platform==='all'?'linkedin':ui.platform,status:'draft',date:ui.selected,time:'',language:'ko',text:'',url:'',notes:'',...record,...overrides};
+  const p={title:'',platform:ui.platform==='all'?'linkedin':ui.platform,status:'draft',date:'',time:'',language:'ko',text:'',url:'',notes:'',...record,...overrides};
   for(const field of ['title','platform','status','date','time','language','text','url','notes'])$(`post-${field}`).value=p[field];
-  $('post-id').value=editingId; $('editor-title').textContent=editingId?'게시물 기록':p.status==='idea'?'새 아이디어':'새 게시물';
+  $('post-id').value=editingId; $('editor-title').textContent=editingId?'콘텐츠 편집':'콘텐츠 저장';
   $('editor-eyebrow').textContent=editingId?`마지막 수정 ${dateLabel(todayKey(new Date(record.updatedAt)))}`:'콘텐츠 기록';
   $('delete-post').hidden=!editingId;$('duplicate-post').hidden=!editingId;$('form-error').hidden=true;
   syncForm();initialForm=JSON.stringify(formValue());editor.showModal();$('post-title').focus();
 }
 function closeEditor() {editor.close();}
-editor.addEventListener('close',()=>{if(externalChange){externalChange=false;reloadStoredData();}const target=returnFocus?.isConnected?returnFocus:returnFocusSelector?document.querySelector(returnFocusSelector):null;(target||$(`view-${ui.view}`).querySelector('h1')).focus({preventScroll:true});});
+editor.addEventListener('close',()=>{if(externalChange){externalChange=false;reloadStoredData();}const target=returnFocus?.isConnected?returnFocus:returnFocusSelector?document.querySelector(returnFocusSelector):null;(target?.getClientRects().length?target:$(`view-${ui.view}`).querySelector('h1')).focus({preventScroll:true});});
 async function tryCloseEditor() {
   if(JSON.stringify(formValue())!==initialForm && !await requestConfirm('저장하지 않고 닫을까요?','작성 중인 변경 사항은 저장되지 않습니다.','닫기'))return;
   closeEditor();
@@ -156,7 +168,9 @@ $('post-form').addEventListener('submit',e=>{
     const post=normalizePost({...old,...formValue(),updatedAt:new Date().toISOString()});
     const posts=old?data.posts.map(p=>p.id===old.id?post:p):[...data.posts,post];
     if(post.date){ui.selected=post.date;ui.month=post.date.slice(0,7);}
-    commit({...data,posts});closeEditor();notify(old?'변경 내용을 저장했어요.':'게시물을 저장했어요.');
+    commit({...data,posts});
+    const nextView=post.status==='published'?'published':editorIntent==='schedule'&&post.date?'calendar':!post.date||ui.view==='published'?'library':ui.view;
+    ui.query='';ui.status='all';ui.platform='all';$('global-search').value='';history.replaceState(null,'',`#${nextView}`);render();closeEditor();notify(old?'변경 내용을 저장했습니다.':'콘텐츠를 저장했습니다.');
   } catch(error){$('form-error').textContent=error.message;$('form-error').hidden=false;}
 });
 $('delete-post').onclick=async()=>{
@@ -165,21 +179,28 @@ $('delete-post').onclick=async()=>{
   try {commit({...data,posts:data.posts.filter(p=>p.id!==post.id)});closeEditor();notify('기록을 삭제했어요.',()=>{try{commit({...data,posts:[...data.posts.filter(p=>p.id!==post.id),post]});notify('기록을 복원했어요.');}catch(e){notify(e.message);}});}catch(e){$('form-error').textContent=e.message;$('form-error').hidden=false;}
 };
 $('duplicate-post').onclick=()=>{
-  editingId='';$('post-id').value='';$('post-title').value=`${$('post-title').value.slice(0,154)} (복제)`;$('post-status').value='draft';$('post-url').value='';$('post-date').value=ui.today;
-  $('editor-title').textContent='게시물 복제';$('editor-eyebrow').textContent='채널과 날짜를 바꿔 새 기록으로 저장하세요.';$('delete-post').hidden=true;$('duplicate-post').hidden=true;syncForm();$('post-platform').focus();
+  editorIntent='edit';
+  editingId='';$('post-id').value='';$('post-title').value=`${$('post-title').value.slice(0,154)} (복제)`;$('post-status').value='draft';$('post-url').value='';$('post-date').value='';
+  $('editor-title').textContent='콘텐츠 복제';$('editor-eyebrow').textContent='채널과 날짜를 바꿔 새 기록으로 저장하세요.';$('delete-post').hidden=true;$('duplicate-post').hidden=true;syncForm();$('post-platform').focus();
 };
-$('copy-post').onclick=async()=>{try{await navigator.clipboard.writeText($('post-text').value);notify('본문을 복사했어요.');}catch{$('post-text').focus();$('post-text').select();notify('본문을 선택했어요. 복사 단축키를 눌러 주세요.');}};
+async function copyBody(post) {try{await navigator.clipboard.writeText(post.text);notify('본문을 복사했습니다.');}catch{openEditor(post);$('post-text').focus();$('post-text').select();notify('본문을 선택했습니다. 복사 단축키를 눌러 주세요.');}}
+$('copy-post').onclick=async()=>{try{await navigator.clipboard.writeText($('post-text').value);notify('본문을 복사했습니다.');}catch{$('post-text').focus();$('post-text').select();notify('본문을 선택했습니다. 복사 단축키를 눌러 주세요.');}};
+
 
 document.addEventListener('click',e=>{
+  const schedule=e.target.closest('[data-schedule]');if(schedule){const post=data.posts.find(p=>p.id===schedule.dataset.schedule);if(post){openEditor(post,{status:post.status==='published'?'published':'planned',date:post.date||todayKey()});editorIntent='schedule';$('post-date').focus();}return;}
+  const publish=e.target.closest('[data-publish]');if(publish){const post=data.posts.find(p=>p.id===publish.dataset.publish);if(post){openEditor(post,{status:'published',date:todayKey()});$('post-url').focus();}return;}
+  const copy=e.target.closest('[data-copy]');if(copy){const post=data.posts.find(p=>p.id===copy.dataset.copy);if(post)copyBody(post);return;}
+  const overview=e.target.closest('[data-open-library]');if(overview){ui.status=overview.dataset.openLibrary;ui.platform='all';ui.query='';$('global-search').value='';history.pushState(null,'','#library');render();$('library-title').focus();return;}
   const edit=e.target.closest('[data-edit]');if(edit){const post=data.posts.find(p=>p.id===edit.dataset.edit);if(post)openEditor(post);return;}
   const date=e.target.closest('[data-date]');if(date){if(date.dataset.date<'1900-01-01'||date.dataset.date>'2100-12-31'){notify('1900년부터 2100년 사이의 날짜를 선택해 주세요.');return;}ui.selected=date.dataset.date;ui.month=ui.selected.slice(0,7);renderCalendar();document.querySelector(`[data-date="${ui.selected}"]`)?.focus({preventScroll:true});return;}
   const ch=e.target.closest('[data-channel]');if(ch){const container=ch.parentElement.id;ui.platform=ch.dataset.channel;render();$(container).querySelector(`[data-channel="${ui.platform}"]`)?.focus({preventScroll:true});return;}
-  const st=e.target.closest('[data-status]');if(st){ui.status=st.dataset.status;renderPosts();$('status-filters').querySelector(`[data-status="${ui.status}"]`)?.focus({preventScroll:true});return;}
+  const st=e.target.closest('[data-status]');if(st){ui.status=st.dataset.status;renderCollections();$('status-filters').querySelector(`[data-status="${ui.status}"]`)?.focus({preventScroll:true});return;}
   const mode=e.target.closest('[data-mode]');if(mode){ui.mode=mode.dataset.mode;renderCalendar();return;}
   const action=e.target.closest('[data-action]')?.dataset.action;
-  if(action==='new'){ui.today=todayKey();openEditor(null,{date:ui.today});}
-  if(action==='new-selected')openEditor();
-  if(action==='new-idea')openEditor(null,{status:'idea',date:'',time:''});
+  if(action==='new')openEditor(null,{date:'',status:'draft'});
+  if(action==='new-selected')openEditor(null,{date:ui.selected,status:'planned'});
+  if(action==='new-published')openEditor(null,{status:'published',date:todayKey()});
   if(action==='close-editor')tryCloseEditor();
   if(action==='reset-filters'){ui.query='';ui.platform='all';ui.status='all';$('global-search').value='';render();}
 });
@@ -193,10 +214,10 @@ $('calendar-grid').addEventListener('keydown',e=>{
 function changePeriod(n){try{const next=ui.mode==='month'?`${shiftMonth(ui.month,n)}-01`:addDays(ui.selected,n*7);if(next<'1900-01-01'||next>'2100-12-31'){notify('1900년부터 2100년까지 표시할 수 있어요.');return;}ui.selected=next;ui.month=next.slice(0,7);renderCalendar();}catch{notify('이 기간은 표시할 수 없습니다.');}}
 $('prev-period').onclick=()=>changePeriod(-1);$('next-period').onclick=()=>changePeriod(1);
 $('go-today').onclick=()=>{ui.today=todayKey();ui.selected=ui.today;ui.month=ui.today.slice(0,7);renderCalendar();};
-$('global-search').addEventListener('input',e=>{ui.query=e.target.value;if(ui.query){history.replaceState(null,'','#posts');ui.view='posts';}render();});
-$('clear-search').onclick=()=>{ui.query='';$('global-search').value='';render();$('global-search').focus();};
-$('post-sort').onchange=e=>{ui.sort=e.target.value;renderPosts();};
-window.addEventListener('hashchange',()=>{if(location.hash==='#main-content'){$('main-content').focus();return;}showView(true);});
+$('global-search').addEventListener('input',e=>{ui.query=e.target.value;ui.status='all';ui.platform='all';if(ui.query){history.replaceState(null,'','#library');ui.view='library';}render();});
+$('clear-search').onclick=()=>{ui.query='';ui.status='all';$('global-search').value='';render();$('global-search').focus();};
+$('post-sort').onchange=e=>{ui.sort=e.target.value;renderCollections();};
+window.addEventListener('hashchange',()=>{if(location.hash==='#main-content'){$('main-content').focus();return;}ui.status='all';ui.query='';$('global-search').value='';render();showView(true);});
 function refreshDay(){if(todayKey()!==ui.today&&!editor.open){const wasToday=ui.selected===ui.today;ui.today=todayKey();if(wasToday){ui.selected=ui.today;ui.month=ui.today.slice(0,7);}render();}}
 window.addEventListener('focus',refreshDay);
 document.addEventListener('visibilitychange',()=>{if(!document.hidden)refreshDay();});
@@ -235,6 +256,6 @@ $('import-file').onchange=async e=>{
 $('post-platform').innerHTML=CHANNELS.map(c=>`<option value="${c.id}">${c.label}</option>`).join('');
 $('post-status').innerHTML=STATUSES.map(s=>`<option value="${s.id}">${s.label}</option>`).join('');
 $('weekly-goal').max='100';
-$('channel-directory').innerHTML=CHANNELS.filter(c=>c.composeUrl).map(c=>`<a href="${esc(c.composeUrl)}" target="_blank" rel="noopener noreferrer"><span class="channel-mark" style="--channel-color:${c.color}">${esc(c.short)}</span><span>${c.label}</span><span aria-hidden="true">↗</span></a>`).join('');
+$('channel-directory').innerHTML=CHANNELS.filter(c=>c.composeUrl).map(c=>`<a href="${esc(c.composeUrl)}" target="_blank" rel="noopener noreferrer"><span class="channel-mark" style="--channel-color:${c.color}">${channelIcon(c.id)}</span><span>${c.label}</span><span aria-hidden="true">↗</span></a>`).join('');
 if(loaded.warning){$('storage-warning').textContent=loaded.warning+' 설정에서 원본 백업과 가져오기를 사용할 수 있습니다.';$('storage-warning').hidden=false;}
 render();

@@ -3,14 +3,15 @@ export const CHANNELS = [
   { id: 'x', label: 'X', short: 'X', color: '#1f1f1f', composeUrl: 'https://x.com/compose/post' },
   { id: 'threads', label: 'Threads', short: 'Th', color: '#444746', composeUrl: 'https://www.threads.net/' },
   { id: 'instagram', label: 'Instagram', short: 'Ig', color: '#b32679', composeUrl: 'https://www.instagram.com/' },
+  { id: 'youtube', label: 'YouTube', short: 'YT', color: '#ff0000', composeUrl: 'https://studio.youtube.com/' },
   { id: 'blog', label: '블로그', short: 'B', color: '#188038', composeUrl: '' },
   { id: 'other', label: '기타', short: '·', color: '#5f6368', composeUrl: '' },
 ];
 export const STATUSES = [
-  { id: 'idea', label: '아이디어', tone: 'neutral' },
-  { id: 'draft', label: '초안', tone: 'amber' },
+  { id: 'idea', label: '보관', tone: 'neutral' },
+  { id: 'draft', label: '작성 중', tone: 'amber' },
   { id: 'ready', label: '준비 완료', tone: 'purple' },
-  { id: 'planned', label: '계획', tone: 'blue' },
+  { id: 'planned', label: '게시 예정', tone: 'blue' },
   { id: 'published', label: '발행 완료', tone: 'green' },
 ];
 export const DATE_MIN = '1900-01-01';
@@ -42,9 +43,11 @@ export function weekRange(date) {
   const start = addDays(date, -((new Date(`${date}T00:00:00Z`).getUTCDay() + 6) % 7));
   return { start, end: addDays(start, 6) };
 }
-export function monthGrid(month) {
+export function monthGrid(month, { compact = false } = {}) {
   const start = weekRange(`${month}-01`).start;
-  return Array.from({ length: 42 }, (_, i) => addDays(start, i));
+  const last = compact ? weekRange(addDays(`${shiftMonth(month, 1)}-01`, -1)).end : '';
+  const length = compact ? (Date.parse(`${last}T00:00:00Z`) - Date.parse(`${start}T00:00:00Z`)) / dayMs + 1 : 42;
+  return Array.from({ length }, (_, i) => addDays(start, i));
 }
 function field(value, label, max, trim = false) {
   if (value === undefined) return '';
