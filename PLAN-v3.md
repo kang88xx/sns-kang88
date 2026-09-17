@@ -28,7 +28,7 @@ Requested 2026-09-17. Workspace: /mnt/j/01_Project/SNS.
 - Preserve v1 records; remote object paths use owner UID and encoded stable record ID. Photos are not embedded in JSON backups. Duplicates start without photos.
 - Local selection and removal are staged until record save succeeds. Uploads retain random names across retries. Publication saves first, then deletes; unavailable cleanup stays visible and retries on login/online/manual action.
 - Record deletion reserves a durable cleanup intent before local removal; 20-second grace exceeds the 16-second undo window. Restored records cancel cleanup. No cross-tab atomicity claim.
-- Supabase account plugin connection confirmed by user; actual project provisioning and live authorization verification remain pending.
+- Supabase account plugin connection and Free organization confirmed by user; project provisioning and live authorization verification completed for the 0.3.0 release.
 
 ## Status
 
@@ -38,6 +38,6 @@ Supabase photo code and SQL are prepared. The 32 Node tests, 11 existing browser
 
 The user confirmed `kang88xx's projects` (Free, Vercel Marketplace-managed) and the administrator email. Created isolated Seoul project `sns-kang88` (`ijflzexbgrzhrjcoljja`) at $0/month, configured the private bucket/RLS and operator allowlist, and connected Production/Preview environment variables. The unrelated `kmir-db` is unchanged. Seven actual API/RLS checks and four real-provider browser checks pass. Both Supabase advisors report zero findings after caching the allowlist policy's `auth.uid()` per statement. The build contains only public configuration; deployment inputs now exclude local context, generated output, and agent files.
 
-The Vercel preview is ready, with all ten public files returning 200 (HTML adds the provider's preview toolbar). The remaining gate is disabling public Auth signups through the authenticated dashboard; the current MCP cannot update Auth configuration and the user has been asked to save that toggle. Once the Auth endpoint confirms the restriction, release PR #4 and verify production photo/record/mobile behavior. The temporary QA account, sessions and photo objects have been cleaned up; only the allowed operator remains. Keep the feature PR in draft until the release gates pass. Follow `supabase/README.md`; no new conversation or plugin reconnect is required.
+Completed 2026-09-17. Public Auth signup was disabled and saved through the existing Windows Chrome session, then verified by the settings API and a rejected signup request. PR #4 was merged as `130a9bd906e4b1f856373841cd62495debf481ad`; main CI and Vercel production deployment succeeded. Six production app checks and four real-photo browser scenarios passed, including ten exact public file hashes, seeded content preservation, mobile controls, and publication cleanup. The temporary QA account, sessions and photo objects have been cleaned up; only the allowed operator remains. Follow `supabase/README.md` for maintenance and `DEPLOYMENT.md` for release evidence.
 
 The proposed photo API/lifecycle contract is retained in ignored `artifacts/qa-v3/cloud-contract.md`. It uses owner-only sessions, encoded record prefixes, unchanged v1 records and publication-save-before-delete ordering.

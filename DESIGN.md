@@ -42,12 +42,12 @@ No framework or new runtime dependencies. Static ES modules, vanilla CSS/HTML, N
 
 ## Open questions
 - [x] Supabase Free Seoul project, private bucket, owner account and deployment environment configured; real owner/unauthorized access checks pass.
-- [ ] Confirm public signup is disabled and verify the production photo release.
+- [x] Public signup disabled and the production photo release verified on 2026-09-17.
 - Existing writing remains browser-local with backup/export. Chinese-class is reference-only; current project work belongs in /mnt/j/01_Project/SNS.
 
-## 0.3 work in progress — photos and mobile
+## 0.3 — photos and mobile
 
-The library will hold photo attachments alongside unpublished writing. Marking a record published retains its text/date/link and removes its cloud photos after the publication record is saved. Show that consequence in the editor; show recoverable progress/errors for upload and deletion. Photo access must be restricted to the owner. Supabase Free is selected. The editor adds a labelled photo area below the body, two columns on mobile and three on desktop. Photos require an allowlisted admin login in Settings. Pending photos have local previews; save uploads them, cancel discards selections. Removal is staged until save. Publishing warns that cloud photos will be deleted, with a persistent retry notice if cleanup fails. Record deletion keeps a 20-second photo grace period for the existing undo action. Duplication copies writing and starts a separate photo folder. Only photos use the cloud; original v1 record backups remain unchanged.
+The library holds photo attachments alongside unpublished writing. Marking a record published retains its text/date/link and removes its cloud photos after the publication record is saved. Show that consequence in the editor; show recoverable progress/errors for upload and deletion. Photo access must be restricted to the owner. Supabase Free is selected. The editor adds a labelled photo area below the body, two columns on mobile and three on desktop. Photos require an allowlisted admin login in Settings. Pending photos have local previews; save uploads them, cancel discards selections. Removal is staged until save. Publishing warns that cloud photos will be deleted, with a persistent retry notice if cleanup fails. Record deletion keeps a 20-second photo grace period for the existing undo action. Duplication copies writing and starts a separate photo folder. Only photos use the cloud; original v1 record backups remain unchanged.
 
 Reuse the existing surfaces, typography and navigation. Mobile spacing in the header, filters and library toolbar is reduced; status filters use one horizontally scrollable row with 44px touch targets. Date selection and the full editing form remain usable at 360px and short viewport heights, with save controls reachable and the form body scrollable. The inert bottom-left name decoration is removed. Preserve desktop layout and existing keyboard focus behavior.
 

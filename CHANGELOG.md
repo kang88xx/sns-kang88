@@ -1,6 +1,6 @@
 # Changelog
 
-## 0.3.0 — unreleased, final Auth setting and production verification pending
+## 0.3.0 — 2026-09-17
 
 - Add private photo selection, previews, download and staged removal with Supabase email/password admin access.
 - Preserve v1 browser-local records and commit writing before photo uploads or publication cleanup.
@@ -9,7 +9,8 @@
 - Add private-bucket/allowlist RLS setup, public-only build configuration and REST/browser tests without new dependencies.
 - Provision the isolated Supabase Free Seoul project and private bucket; verify owner access, unauthorized denial, size/type restrictions and the real photo lifecycle.
 - Resolve the allowlist RLS performance warning and exclude local context/generated files from deployment input.
-- Configure Vercel environments and verify the preview; public signup restriction and production release remain pending.
+- Disable public signup, configure Vercel environments, merge PR #4 and deploy to sns.kang88.io.
+- Verify all ten production files, existing record/keyboard/mobile behavior and real photo upload/reload/publication cleanup.
 
 ## 0.2.1 — 2026-09-17
 

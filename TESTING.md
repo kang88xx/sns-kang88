@@ -8,7 +8,7 @@ The original 20 model tests cover KST midnight, leap days/year rollover, Monday-
 
 The cross-tab guard compares a saved snapshot before writing. It is an optimistic check, not an atomic lock; these tests do not prove that simultaneous writes from separate tabs cannot race.
 
-## Supabase photo verification — 0.3 prepared, not released
+## Supabase photo verification — 0.3.0 released
 
 The suite now includes 32 Node tests. The 12 photo transport tests cover MIME/signature/size limits, encoded record IDs, public-only configuration, allowlist login, unavailable session storage, owner paths, authenticated private reads, pagination, deterministic retry at the ten-file limit, token refresh, denied-session recovery, local logout and incomplete deletion detection. These use mocked REST and do not prove hosted RLS.
 
@@ -22,7 +22,7 @@ All 11 existing calendar/record/import/keyboard/mobile browser scenarios and the
 
 The hosted test helpers were strengthened to reject unexpected/network errors instead of treating them as authorization denials, and browser cleanup now checks the exact record folders and publication-before-delete ordering. All seven API and four browser checks passed again. The temporary QA account was signed out and removed; the database confirms one operator, one allowlist row, and zero photos. Temporary local administrative environment files were removed. A six-check local rehearsal of the production runner also passed; its HTTPS check was explicitly skipped on localhost and does not establish production success.
 
-**Still required:** verify public signup is disabled, then release and verify production. See [supabase/README.md](supabase/README.md). Current production remains the previously verified 0.2.1 mobile release; the photo feature is not yet live. No new conversation or plugin reconnect is required.
+**Production verification — 2026-09-17:** Public signup was disabled and saved through the user's existing Windows Chrome session. API readback confirms `disable_signup: true`; a synthetic signup request returns HTTP 422 `signup_disabled`. PR #4 was merged as `130a9bd906e4b1f856373841cd62495debf481ad`, and both main CI and the production deployment succeeded. Six production checks pass: HTTPS 200, ten byte-exact public files, seeded LinkedIn body/URL save and reload, synthetic local CRUD, calendar/filter/keyboard/focus behavior, and reachable mobile save controls at 360×500. No application JavaScript, CSP, or same-origin resource errors were observed. Four real-photo scenarios also pass against `https://sns.kang88.io`, including exact-folder cleanup after publication. Evidence: `artifacts/qa-supabase/auth-settings.json`, `artifacts/qa-supabase-live/prod-public-results-qa-20260917113100-c156ff1a.json`, and `artifacts/qa-supabase-live/live-browser-results-qa-20260917113100-ee1fc3ea.json`. See [DEPLOYMENT.md](DEPLOYMENT.md) and [Supabase setup](supabase/README.md).
 
 ## Browser acceptance
 
