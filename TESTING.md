@@ -25,6 +25,8 @@ The cross-tab guard compares a saved snapshot before writing. It is an optimisti
 
 ## v0.2 local verification — 2026-09-17
 
+For v0.2.1, syntax checks, all 20 Node tests, build and diff checks passed again. Five targeted browser regressions passed for the calendar, full library/schedule/publish flow, search/filters, dialog keyboard/duplication and mobile editing. Additional screenshots and assertions cover the compact 360px library and a 360px short-height editor with reachable save controls. Evidence is in ignored `artifacts/qa-v3/` and `artifacts/qa-v3/regression/`.
+
 All 20 Node tests, syntax checks, build and diff whitespace checks passed. The seven build outputs were compared byte-for-byte with source. An independent code review approved the final app/build changes.
 
 Eleven Chromium browser scenarios passed across a full run and targeted reruns: calendar layout/icons, library→schedule→published persistence, legacy routes/calendar keyboard navigation, edit/delete/undo, global search/filters, dialog cancellation/duplication, mobile editing, backup validation/merge/recovery, stale-editor protection, failed-save preservation, and denied-clipboard text selection. Screenshots were inspected at 1440/768/360px, including eight records on one mobile date. The reruns resolved local navigation timing failures; no application JavaScript errors were observed. Google Fonts were blocked in the interaction suite to exercise the system-font fallback.
