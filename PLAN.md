@@ -1,5 +1,7 @@
 # Content calendar delivery
 
+This is the v0.1 delivery record. Follow [PLAN-v2.md](PLAN-v2.md) for the compact calendar and content-library revision.
+
 Completed 2026-09-17.
 
 - [x] Inspect Chinese-class UI and target/deployment access; reference remains unchanged.

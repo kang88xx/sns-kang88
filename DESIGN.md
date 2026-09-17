@@ -7,38 +7,41 @@ Active · 2026-09-17. Personal content calendar at sns.kang88.io. Reference: ../
 Calm, practical, personal. Korean interface; English and Chinese post content supported. Avoid hype, gradients, decorative imagery, fake analytics and fake scheduled posts.
 
 ## Product goals
-Plan posting dates, keep full drafts, track publication per channel, collect ideas, export/restore data. Seed today's two genuinely published GIWA posts. Success: create/edit/filter/find a post, reload without loss, access publication URL, recover a backup.
+Plan posting dates, keep full drafts and video scripts, track publication per channel, manage unpublished content in a library, export/restore data. Seed today's two genuinely published GIWA posts. Success: create/edit/filter/find content, reload without loss, access publication URL, recover a backup.
 Non-goals: social login, automatic posting, channel API integrations, invented engagement metrics.
 
 ## Personas and jobs
-Kang: Korean Web3 PM working with Chinese and English-speaking clients. Plan posts across LinkedIn/X/Threads; adapt one topic by duplicating a post to another channel; retain multilingual writing; review weekly consistency.
+Kang: Korean Web3 PM working with Chinese and English-speaking clients. Plan posts across LinkedIn/X/Threads/YouTube; adapt one topic by duplicating content to another channel; retain multilingual writing; review weekly consistency.
 
 ## Information architecture
-Calendar (default): week summary, month navigation, channel filters, seven-column month grid, selected-day details. Posts: searchable/filterable dated records. Ideas: unscheduled ideas. Settings: weekly target and local data backup/import.
+Calendar (default): compact month/week navigation, channel filters, seven-column grid, selected-day details, upcoming dated content. Content Library: searchable/filterable unpublished records, including undated drafts and saved ideas. Published history: manually recorded published content. Settings: weekly target and local data backup/import.
 
 ## Design principles
 Visible posting status separate from date. A planned date does not schedule a social-network publication. A single record belongs to one channel so statuses can differ. Preserve full text. Empty days stay empty. Private edits remain in this browser by default.
 
 ## Visual language
-Reference tokens: white bg; #f8fafd surface-1, #f0f4f9 tonal, #e9eef6 elevated; #1f1f1f main text, #444746 secondary, #5f6368 muted; #0b57d0 primary, #d3e3fd selected. Green published, blue planned, amber draft, neutral idea. Radii 8/12/16/28 px. Roboto/Noto Sans KR with system fallback. Desktop rail 88px; sticky appbar 64px. Flat tonal cards with restrained borders and rare shadow. SVG stroke icons; no font-dependent icon names.
+Reference tokens: white bg; #f8fafd surface-1, #f0f4f9 tonal, #e9eef6 elevated; #1f1f1f main text, #444746 secondary, #5f6368 muted; #0b57d0 primary, #d3e3fd selected. Green published, blue planned, amber draft, purple ready, neutral stored. Radii 8/12/16/28 px. Roboto/Noto Sans KR with system fallback. Desktop rail 88px; sticky appbar 64px. Flat tonal cards with restrained borders and rare shadow. Reusable SVG channel icons; no font-dependent icon names.
 
 ## Components
-Appbar with brand/search/new-post. Side rail and mobile bottom nav. Stat tiles and weekly goal progress. Month toolbar, channel chips, calendar day buttons, status badges, record cards. Post editor dialog: title, channel, status, date/time, language, body, published URL, notes; save, duplicate, delete with undo. Native inputs and dialog.
+Appbar with brand, global search and content-save action. Side rail and mobile bottom nav. Actionable summary strip, month toolbar, channel chips, compact calendar day buttons, status badges, record cards. Editor dialog: title, channel, status, date/time, language, body, published URL, notes; save, copy body, duplicate, delete with undo. Native inputs and dialog.
 
 ## Accessibility
 Semantic buttons and links, labelled fields, aria-current nav, aria-pressed filters, keyboard calendar arrows, dialog focus trap/restore, Escape close. Status uses text plus color. Visible focus, 44px touch targets, reduced-motion support. Invalid fields/errors announced; explicit save-failure feedback.
 
 ## Responsive behavior
-Desktop month + right day panel. Below 1000px selected day panel under grid. Below 900px bottom navigation replaces rail, header stacks, main padding shrinks. Below 600px calendar cells show short channel marks/counts with full accessible names; never force a 7-column desktop card width. No horizontal page overflow at 360px.
+Desktop month + right day panel. Below 1000px selected day panel under grid. Below 900px bottom navigation replaces rail, header stacks, main padding shrinks. Calendar month uses only the complete weeks needed for the visible month, so months can render as 28, 35 or 42 cells. Compact day cells show one channel icon per dated record, including repeated channels, with full accessible names on the date button. No horizontal page overflow at 360px.
 
 ## Interaction states
 Local load is immediate. Empty calendar day offers add action; empty search offers reset. Save errors keep dialog open. Corrupt storage is not overwritten automatically. Normal JSON import validates first and merges by stable ID with preview/confirmation, replacing only newer records and retaining current settings. Explicit corrupt-storage recovery replaces records and settings with the validated backup; failed validation or writing retains stored data. Detected changes in another tab block an open editor until it is closed and reopened; the pre-save snapshot check is not an atomic cross-tab lock. Deletion undo available. Data export is available without network. No auto-publish semantics.
 
 ## Content voice
-Short Korean labels: 계획, 초안, 준비 완료, 발행 완료, 아이디어. Button '저장' never suggests network publication. '발행 완료' is a manual record status. Storage description explains browser-only persistence and backups.
+Short Korean labels: 보관, 작성 중, 준비 완료, 게시 예정, 발행 완료. Button '저장' never suggests network publication. '발행 완료' is a manual record status. Storage description explains browser-only persistence and backups.
 
 ## Implementation constraints
-No framework or new runtime dependencies. Static ES modules, vanilla CSS/HTML, Node built-in tests. Vercel deployment with public seeded records only; no draft text in server logs. localStorage versioned JSON and validated import/export. User-entered text never interpolated unescaped into HTML; external links only http/https. Date arithmetic UTC date-only, display/context Asia/Seoul. No credentials committed.
+No framework or new runtime dependencies. Static ES modules, vanilla CSS/HTML, Node built-in tests. Vercel deployment with public seeded records only; no draft text in server logs. Build output is the seven-file static whitelist. localStorage versioned JSON and validated import/export. User-entered text never interpolated unescaped into HTML; external links only http/https. Date arithmetic UTC date-only, display/context Asia/Seoul. No credentials committed.
 
 ## Open questions
-- No blocking design questions. Initial storage is browser-local with backup/export. Chinese-class is reference-only; all project work belongs in /Volumes/T9/01_Project/SNS.
+- No blocking design questions. Initial storage is browser-local with backup/export. Chinese-class is reference-only; current project work belongs in /mnt/j/01_Project/SNS.
+
+## 0.2 revision — content workflow
+The calendar shows one compact channel icon per dated record, including repeated platforms; titles/body are available in the selected-day panel. Use minimal whole weeks (28/35/42 cells). Calendar height follows occupied icon rows, with small empty cells rather than fixed tall blocks. Navigation becomes Calendar → Content Library → Published history → Settings. The library contains all unpublished content and starts new records without dates. Scheduling sets a date explicitly; recording publication is separate from actual SNS posting. Legacy #ideas/#posts routes map to the library, and stored idea IDs remain accepted with the visible label 보관. Global search covers both saved and published content and labels that scope. YouTube joins existing channels. Remove motivational/descriptive copy that repeats visible controls; keep storage/backups and manual-publication constraints.

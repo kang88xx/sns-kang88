@@ -1,6 +1,6 @@
 # SNS calendar workspace
 
-Work in /Volumes/T9/01_Project/SNS. Reference ../Chinese-class/site is read-only design evidence. Follow DESIGN.md. No framework/runtime dependency is needed.
+Work in /mnt/j/01_Project/SNS (current WSL workspace; previously /Volumes/T9/01_Project/SNS on macOS). Reference ../Chinese-class/site is read-only design evidence. Follow DESIGN.md. No framework/runtime dependency is needed.
 
 ## Validation
 Run `npm run check`, `npm test`, `npm run build`. UI changes require browser checks of calendar selection, record create/edit/reload, filtering, dialog keyboard controls, and mobile layout. Never claim automatic social posting; status is a manual record.
