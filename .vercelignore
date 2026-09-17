@@ -1,0 +1,9 @@
+.git
+.env*
+.omx
+.gstack
+artifacts
+test-results
+node_modules
+._*
+.DS_Store
