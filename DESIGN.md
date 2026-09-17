@@ -41,7 +41,14 @@ Short Korean labels: 보관, 작성 중, 준비 완료, 게시 예정, 발행 �
 No framework or new runtime dependencies. Static ES modules, vanilla CSS/HTML, Node built-in tests. Vercel deployment with public seeded records only; no draft text in server logs. Build output is the seven-file static whitelist. localStorage versioned JSON and validated import/export. User-entered text never interpolated unescaped into HTML; external links only http/https. Date arithmetic UTC date-only, display/context Asia/Seoul. No credentials committed.
 
 ## Open questions
-- No blocking design questions. Initial storage is browser-local with backup/export. Chinese-class is reference-only; current project work belongs in /mnt/j/01_Project/SNS.
+- [ ] Photo cloud provider and owner access setup: user selection pending between the recommended Vercel Blob setup and Supabase. This affects only the new cloud-photo work.
+- Existing writing remains browser-local with backup/export. Chinese-class is reference-only; current project work belongs in /mnt/j/01_Project/SNS.
+
+## 0.3 work in progress — photos and mobile
+
+The library will hold photo attachments alongside unpublished writing. Marking a record published retains its text/date/link and removes its cloud photos after the publication record is saved. Show that consequence in the editor; show recoverable progress/errors for upload and deletion. Photo access must be restricted to the owner. The cloud provider/access setup is being confirmed; cloud photo storage is not yet available.
+
+Reuse the existing surfaces, typography and navigation. Mobile spacing in the header, filters and library toolbar is reduced; status filters use one horizontally scrollable row with 44px touch targets. Date selection and the full editing form remain usable at 360px and short viewport heights, with save controls reachable and the form body scrollable. The inert bottom-left name decoration is removed. Preserve desktop layout and existing keyboard focus behavior.
 
 ## 0.2 revision — content workflow
 The calendar shows one compact channel icon per dated record, including repeated platforms; titles/body are available in the selected-day panel. Use minimal whole weeks (28/35/42 cells). Calendar height follows occupied icon rows, with small empty cells rather than fixed tall blocks. Navigation becomes Calendar → Content Library → Published history → Settings. The library contains all unpublished content and starts new records without dates. Scheduling sets a date explicitly; recording publication is separate from actual SNS posting. Legacy #ideas/#posts routes map to the library, and stored idea IDs remain accepted with the visible label 보관. Global search covers both saved and published content and labels that scope. YouTube joins existing channels. Remove motivational/descriptive copy that repeats visible controls; keep storage/backups and manual-publication constraints.

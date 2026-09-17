@@ -62,8 +62,6 @@ main:focus, h1:focus { outline: none; }
 .rail a:hover .rail-icon { background: var(--surface-2); }
 .rail a.active, .rail a[aria-current="page"] { color: var(--blue); }
 .rail a.active .rail-icon, .rail a[aria-current="page"] .rail-icon { background: var(--blue-cont); }
-.rail-bottom { margin-top: auto; }
-.avatar { width: 34px; height: 34px; display: grid; place-items: center; border-radius: 50%; color: #40566a; background: var(--surface-3); font-size: 13px; }
 main { width: calc(100% - var(--rail-w)); max-width: var(--maxw); min-width: 0; flex: 1; padding: 20px 32px 36px; }
 .page-head { padding: 0 0 18px; }
 .page-head h1 { font-size: 27px; font-weight: 400; letter-spacing: -.8px; line-height: 1.5; }
@@ -223,41 +221,44 @@ input::placeholder, textarea::placeholder { color: #73777c; }
   .day-heading { margin-bottom: 12px; }
 }
 @media (max-width: 900px) {
-  :root { --appbar-h: 116px; }
-  .appbar { height: auto; min-height: var(--appbar-h); grid-template-columns: 1fr auto; gap: 8px 12px; padding: 9px 20px 11px; border-bottom: 1px solid var(--outline-soft); }
+  :root { --appbar-h: 108px; }
+  .appbar { height: auto; min-height: var(--appbar-h); grid-template-columns: 1fr auto; gap: 7px 12px; padding: 7px 20px 9px; border-bottom: 1px solid var(--outline-soft); }
   .searchbar { grid-column: 1 / -1; grid-row: 2; height: 44px; }
   .searchbar input { font-size: 16px; }
   .brand-name { font-size: 18px; }
   .rail { position: fixed; z-index: 40; top: auto; bottom: 0; left: 0; right: 0; width: 100%; height: auto; flex-direction: row; padding: 7px 8px calc(7px + env(safe-area-inset-bottom)); gap: 0; border-top: 1px solid var(--outline-soft); background: var(--surface-1); }
   .rail a { flex: 1 1 0; padding: 0; gap: 3px; font-size: 11px; }
   .rail-icon { height: 30px; }
-  .rail-bottom { display: none; }
-  main { width: 100%; max-width: 100%; padding: 22px 24px calc(100px + env(safe-area-inset-bottom)); }
+  main { width: 100%; max-width: 100%; padding: 18px 24px calc(96px + env(safe-area-inset-bottom)); }
   .page-head h1 { font-size: 24px; }
   .toast { bottom: calc(84px + env(safe-area-inset-bottom)); }
-  .list-toolbar, .library-toolbar { align-items: flex-start; flex-direction: column; }
+  .list-toolbar, .library-toolbar { align-items: stretch; flex-direction: column; gap: 8px; margin: 12px 0 8px; }
+  .status-filters { flex-wrap: nowrap; overflow-x: auto; padding: 1px 0 4px; scrollbar-width: thin; }
+  .status-filters button { flex: 0 0 auto; }
+  .sort-control { align-self: flex-start; }
 }
 @media (max-width: 600px) {
-  .appbar { padding-inline: 16px; }
+  :root { --appbar-h: 102px; }
+  .appbar { padding: 7px 16px 8px; gap: 6px 10px; }
   .brand-mark { width: 32px; height: 32px; font-size: 19px; }
   .brand { gap: 8px; }
   .brand-name { font-size: 17px; }
   .appbar-right .btn { padding-inline: 14px; font-size: 12px; }
-  main { padding: 20px 16px calc(94px + env(safe-area-inset-bottom)); }
-  .page-head { padding-bottom: 14px; }
-  .summary-strip { gap: 0; padding: 4px; margin-bottom: 14px; }
+  main { padding: 16px 16px calc(92px + env(safe-area-inset-bottom)); }
+  .page-head { padding-bottom: 10px; }
+  .summary-strip { gap: 0; padding: 3px; margin-bottom: 10px; }
   .overview-item { flex: 1 1 auto; justify-content: center; gap: 7px; padding: 5px 8px; font-size: 13px; }
   .overview-item strong { font-size: 16px; }
   .goal-overview { margin-left: 0; }
   .page-head h1 { font-size: 22px; }
-  .page-sub { font-size: 12px; max-width: 31ch; }
+  .page-sub { margin-top: 2px; font-size: 12px; max-width: 31ch; }
   .page-head > .pill { display: none; }
   .heading-row { align-items: flex-start; }
   .heading-row > .btn { padding: 8px 12px; font-size: 12px; }
-  .section-head { margin-top: 23px; }
+  .section-head { margin: 18px 0 8px; }
   .section-head h2 { font-size: 16px; }
   .section-head .quiet { font-size: 10px; }
-  .channel-filters { flex-wrap: nowrap; overflow-x: auto; gap: 6px; margin-bottom: 10px; padding: 3px; scrollbar-width: thin; }
+  .channel-filters { flex-wrap: nowrap; overflow-x: auto; gap: 6px; margin-bottom: 8px; padding: 2px 0 4px; scrollbar-width: thin; }
   .channel-chip { flex: 0 0 auto; gap: 6px; padding: 6px 11px; font-size: 13px; }
   .channel-mark { width: 18px; height: 18px; font-size: 10px; }
   .channel-count { font-size: 12px; }
@@ -283,16 +284,18 @@ input::placeholder, textarea::placeholder { color: #73777c; }
   .post-top { gap: 8px; }
   .empty-state { padding: 24px 16px; }
   footer { font-size: 10px; gap: 4px; margin-top: 26px; }
-  dialog { width: 100%; max-width: 100%; max-height: 92dvh; margin: auto 0 0; border-radius: 24px 24px 0 0; }
-  #post-form { max-height: 92dvh; }
-  .dialog-head { padding: 18px 18px 14px; }
+  dialog { width: 100%; max-width: 100%; max-height: min(92dvh, calc(100dvh - env(safe-area-inset-top) - 8px)); margin: auto 0 0; border-radius: 24px 24px 0 0; }
+  #post-form { max-height: min(92dvh, calc(100dvh - env(safe-area-inset-top) - 8px)); }
+  .dialog-head { padding: 16px 18px 10px; }
   .dialog-head h2 { font-size: 20px; }
-  .dialog-body { padding: 0 18px 16px; }
+  .dialog-body { padding: 0 18px 12px; }
+  .dialog-body label { margin: 10px 0 5px; }
   .dialog-body input:not([type="hidden"]), .dialog-body textarea, .dialog-body select { font-size: 16px; }
   .dialog-body label { font-size: 12px; }
+  .body-label { margin: 12px 0 6px; }
   .body-label select { font-size: 13px; }
   .form-row { gap: 10px; }
-  .dialog-foot { padding: 10px 12px calc(14px + env(safe-area-inset-bottom)); gap: 4px; }
+  .dialog-foot { position: sticky; bottom: 0; padding: 8px 12px calc(12px + env(safe-area-inset-bottom)); gap: 4px; }
   .dialog-foot .btn { padding-inline: 14px; font-size: 13px; }
   .secondary-actions, .primary-actions { gap: 0; }
   #confirm-dialog { margin: auto; border-radius: 24px; }

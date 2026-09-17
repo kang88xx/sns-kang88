@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.2.1 — 2026-09-17
+
+- Tighten mobile header, library and filter spacing while retaining 44px controls.
+- Keep mobile status filters in one horizontally scrollable row.
+- Keep editor save/cancel controls reachable on short mobile screens with safe-area-aware dialog sizing.
+- Remove the noninteractive bottom-left name decoration and its unused styles.
+
 ## 0.2.0 — 2026-09-17
 
 - Replace Posts/Ideas navigation with Content Library and Published history while keeping legacy `#posts`/`#ideas` aliases.
