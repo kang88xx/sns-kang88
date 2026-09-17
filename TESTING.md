@@ -25,7 +25,7 @@ The cross-tab guard compares a saved snapshot before writing. It is an optimisti
 
 ## v0.2 local verification — 2026-09-17
 
-For v0.2.1, syntax checks, all 20 Node tests, build and diff checks passed again. Five targeted browser regressions passed for the calendar, full library/schedule/publish flow, search/filters, dialog keyboard/duplication and mobile editing. Additional screenshots and assertions cover the compact 360px library and a 360px short-height editor with reachable save controls. Evidence is in ignored `artifacts/qa-v3/` and `artifacts/qa-v3/regression/`.
+For v0.2.1, syntax checks, all 20 Node tests, build and diff checks passed again. Five targeted browser regressions passed for the calendar, full library/schedule/publish flow, search/filters, dialog keyboard/duplication and mobile editing. Additional screenshots and assertions cover the compact 360px library and a 360px short-height editor with reachable save controls. Evidence is in ignored `artifacts/qa-v3/` and `artifacts/qa-v3/regression/`. Production v0.2.1 was verified at 19:02 Asia/Seoul: all seven file hashes matched, seeded text/URL survived save/reload, the name marker was absent, status filters stayed in one row and save remained reachable at 360×500.
 
 All 20 Node tests, syntax checks, build and diff whitespace checks passed. The seven build outputs were compared byte-for-byte with source. An independent code review approved the final app/build changes.
 

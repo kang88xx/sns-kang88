@@ -30,6 +30,8 @@ Requested 2026-09-17. Workspace: /mnt/j/01_Project/SNS.
 
 ## Status
 
-Mobile CSS and removal of the inert name decoration are implemented for v0.2.1. Targeted mobile checks, five existing UI regression scenarios, 20 Node tests and the static build pass. Mobile deployment verification is pending.
+Mobile CSS and removal of the inert name decoration are implemented for v0.2.1. Targeted mobile checks, five existing UI regression scenarios, 20 Node tests and the static build pass. Mobile changes were merged through PR #3 and deployed; production verified at 19:02 Asia/Seoul with seven matching file hashes, existing seeded save/reload, absent name marker, single-row mobile filters and reachable save controls on a short viewport.
 
 Photo implementation is pending the cloud/SDK selection. No cloud storage or photo deletion has been provisioned or verified yet.
+
+The proposed photo API/lifecycle contract is retained in ignored `artifacts/qa-v3/cloud-contract.md`. It uses owner-only sessions, encoded record prefixes, unchanged v1 records and publication-save-before-delete ordering.
