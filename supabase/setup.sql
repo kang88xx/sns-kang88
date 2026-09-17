@@ -19,7 +19,7 @@ create policy "photo owners can read own allowlist row"
 on public.photo_owners
 for select
 to authenticated
-using (user_id = auth.uid());
+using (user_id = (select auth.uid()));
 
 insert into storage.buckets (id, name, public, file_size_limit, allowed_mime_types)
 values (

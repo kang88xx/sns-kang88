@@ -41,7 +41,8 @@ Short Korean labels: 보관, 작성 중, 준비 완료, 게시 예정, 발행 �
 No framework or new runtime dependencies. Static ES modules, vanilla CSS/HTML, Node built-in tests. Vercel deployment with public seeded records only; no draft text in server logs. Build output uses an explicit static whitelist, including the photo modules and generated public cloud configuration. localStorage versioned JSON and validated import/export. User-entered text never interpolated unescaped into HTML; external links only http/https. Date arithmetic UTC date-only, display/context Asia/Seoul. No credentials committed.
 
 ## Open questions
-- [ ] Supabase Free selected. Provision the private bucket, owner account and production environment, then verify live access.
+- [x] Supabase Free Seoul project, private bucket, owner account and deployment environment configured; real owner/unauthorized access checks pass.
+- [ ] Confirm public signup is disabled and verify the production photo release.
 - Existing writing remains browser-local with backup/export. Chinese-class is reference-only; current project work belongs in /mnt/j/01_Project/SNS.
 
 ## 0.3 work in progress — photos and mobile
